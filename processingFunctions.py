@@ -38,22 +38,26 @@ def filterGravity(df):
 
     return gravity
 
-def findJerk(dfAccData):
+def findBodyJerk(dfAccData):
     dt = pd.to_datetime(dfAccData['timestamp']).diff().apply(lambda x: x/np.timedelta64(1, 'ms')).fillna(0).astype('int64')
 
     vx = dfAccData['xBody'].diff() / dt
-    # vy = dfAccData['y'].diff() / dt
-    # vz = dfAccData['z'].diff() / dt
+    vy = dfAccData['yBody'].diff() / dt
+    vz = dfAccData['zBody'].diff() / dt
 
     jx = vx.diff() / dt
-    # jy = vy.diff() / dt
-    # jz = vz.diff() / dt
+    jy = vy.diff() / dt
+    jz = vz.diff() / dt
 
-    return jx
+    return jx, jy, jz
 
 def findSMA(dfx, dfy, dfz):
     sum_abs = np.abs(dfx) + np.abs(dfy) + np.abs(dfz)
     return (sum_abs/len(dfx)).mean()
+
+def findSMAMagnitude(df):
+    sum_abs = np.abs(df)
+    return (sum_abs/len(df)).mean()
 
 def findEnergy(df):
     return np.sum((df**2))/len(df)
@@ -82,3 +86,20 @@ def entropy1(labels, base=None):
 def findArCoeff(df, order):
     rho, sigma2 = sm.regression.linear_model.burg(df, order=order)
     return rho
+
+def findMagnitudeBody(df):
+    return np.sqrt(df['xBody']**2 + df['yBody']**2 + df['zBody']**2)
+
+def findMagnitudeGravity(df):
+    return np.sqrt(df['xGravity']**2 + df['yGravity']**2 + df['zGravity']**2)
+
+def findMagnitudeBodyJerk(df):
+    return np.sqrt(df['xBodyJerk']**2 + df['yBodyJerk']**2 + df['zBodyJerk']**2)
+
+def findFFT(df):
+    return np.fft.fftfreq(len(df))
+     
+def maxInds(df):
+    freq_axis = np.linspace(0, 100, num=1024)
+    max_index = np.argmax(np.abs(df))
+    return max_index
