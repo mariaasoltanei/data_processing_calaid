@@ -5,28 +5,6 @@ import math
 import statsmodels.api as sm
 from scipy.signal import butter, filtfilt, medfilt
 from scipy.stats import median_abs_deviation, entropy
-# def compute_tBodyAcc_mean_X(data):
-#     # Applying median filter
-#     data = data.rolling(window=3, center=True).median().fillna(method='bfill').fillna(method='ffill')
-    
-#     # Applying low pass Butterworth filter
-#     fs = 50  # sampling frequency
-#     cutoff = 20  # cutoff frequency
-#     nyq = 0.5 * fs  # Nyquist frequency
-#     normal_cutoff = cutoff / nyq  # normalized cutoff frequency
-#     b, a = butter(3, normal_cutoff, btype='low', analog=False)
-#     data = filtfilt(b, a, data, axis=0)
-    
-#     # Separating body and gravity acceleration signals
-#     cutoff = 0.3  # cutoff frequency
-#     nyq = 0.5 * fs  # Nyquist frequency
-#     normal_cutoff = cutoff / nyq  # normalized cutoff frequency
-#     b, a = signal.butter(1, normal_cutoff, btype='low', analog=False)
-#     data = signal.filtfilt(b, a, data, axis=0)
-    
-#     # Computing tBodyAcc-mean()-X
-#     tBodyAcc_X = data['x']
-#     tBodyAcc_mean_X = tBodyAcc_X.mean()
     
 #     return tBodyAcc_mean_X
 def findSMA(dfx, dfy, dfz):

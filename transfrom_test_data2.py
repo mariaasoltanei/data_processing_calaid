@@ -5,9 +5,13 @@ import math
 from scipy.stats import median_abs_deviation, entropy
 from processingFunctions import filterAcceleration, findFFT, maxInds, findMagnitudeGravity,findMagnitudeBodyJerk, findBodyJerk, findSMAMagnitude, findMagnitudeBody, filterGravity, findSMA, findEnergy, findQuantile, findEntropy, findArCoeff
 from testDict import testDataDict
+import certifi
+import pandas as pd
+import time
+ca = certifi.where()
 
 uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
-client = pymongo.MongoClient(uriMongodb)
+client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
 db = client['calaid_android']
 accelerometerDataCollection = db['AccelerometerData']
 
@@ -337,7 +341,7 @@ print(((testDataDict['fBodyAcc-maxInds-X'])))
 # print((testDataDict['tBodyAcc-arCoeff()-Y,1']))
 # print((testDataDict['tBodyAcc-arCoeff()-Z,1']))
 # print((testDataDict['tBodyAcc-correlation()-X,Y']))
-# testDataDF = pd.DataFrame(testDataDict)
-# print(testDataDF)
-# testDataDF.to_csv('/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/uci_har_dataset/modeled_csv/test1.csv', encoding='utf-8', index=False)
+testDataDF = pd.DataFrame(testDataDict)
+print(testDataDF)
+testDataDF.to_csv('/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/uci_har_dataset/modeled_csv/test1.csv', encoding='utf-8', index=False)
 # print(windowed_df)

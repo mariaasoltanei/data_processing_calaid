@@ -1,5 +1,5 @@
 import pymongo
-from datetime import datetime
+from datetime import datetime, timedelta
 import certifi
 import pandas as pd
 import time
@@ -17,7 +17,14 @@ def calculateMETSWalking(speedPerMin):
 def calculateCalories(duration, mets, userWeight):
     return 1.05 * mets * duration * userWeight
 
-def getActivityDetails(mongoUserId, noSteps):
+def getActivityDetails(mongoUserId, currentTimestamp):
+    print("Current", currentTimestamp)
+    dt = datetime.strptime(currentTimestamp, '%Y-%m-%d %H:%M:%S.%f')
+    dtMongo = dt - timedelta(hours=3)
+    print("Dt mongo", type(dtMongo))
+    print("Mongo",dtMongo)
+    dtFiveSec = dtMongo - timedelta(seconds=20) #poate merge mai putin
+    print("3 sec",dtFiveSec)
     uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
     client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
     db = client['calaid_android']
@@ -27,12 +34,15 @@ def getActivityDetails(mongoUserId, noSteps):
     userWeight = float(user["weight"])
     userHeight = user["height"]
     strideLengthMeters = 0.415 * int(userHeight) * 0.01
-    timestamps = []
-    noSteps = []
-    listStepData = list(stepCountDataCollection.find({ "userId": mongoUserId, "noSteps": { "$gte" : noSteps}})) #
-    if(len(listStepData) != 0):
+
+    #TODO take steps in the las 10 seconds 2023-05-04T16:27:51.050+00:00
+    #, "timestamp":{"$gte": dtFiveSec, "$lte": dtMongo}
+    listStepData = list(stepCountDataCollection.find({ "userId": mongoUserId, "timestamp":{"$gte": dtFiveSec, "$lte": dtMongo} }))
+    print(len(listStepData))
+    if(len(listStepData) > 1):
         dfStepData = pd.DataFrame(listStepData)
         dfStepData = dfStepData.sort_values('timestamp')
+        print(dfStepData)
 
         activityDurationMins = (max(dfStepData['timestamp']) - min(dfStepData['timestamp'])).total_seconds() / 60
         activityDurationHours = (max(dfStepData['timestamp']) - min(dfStepData['timestamp'])).total_seconds() / 3600.0
@@ -43,7 +53,13 @@ def getActivityDetails(mongoUserId, noSteps):
 
         mets = calculateMETSWalking(speed)
         calories = "{:.2f}".format(calculateCalories(activityDurationHours, mets, userWeight))
-        return calories, speed, "{:.2f}".format(activityDurationMins)
+        print("Calories", calories)
+        print("Speed", speed)
+        return calories, speed
     else:
-        time.sleep(5)
+        return 0, 0
 
+
+
+pula1,pula2 = getActivityDetails("6414e7b4911b2b5943024071","2023-05-04 21:52:52.742000")
+print(pula1, pula2)

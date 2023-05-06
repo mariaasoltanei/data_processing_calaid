@@ -5,18 +5,23 @@ from flask import jsonify, request
 import time
 ca = certifi.where()
 
-#ruta sa fie in functie de user id
-@app.route('/calories/<userId>', methods=['GET', 'POST'])
+
+@app.route('/calories/<userId>', methods=['POST'])
 def getCalories(userId):
     if request.method == 'POST':
-           noSteps = request.args.get("noSteps")
-           calories, speed, activityDurationMins = getActivityDetails(userId)
-    else:
-        calories, speed, activityDurationMins = getActivityDetails(userId)
+        print("USER ID", userId)
+        jsonTimestamp = request.get_json()
+        timestamp = jsonTimestamp['timestamp']
+        print(jsonTimestamp['timestamp'])
+        print(type(jsonTimestamp['timestamp']))
+           #calories, speed, activityDurationMins = getActivityDetails(userId)
+        calories, speed = getActivityDetails(userId, timestamp)
+        
+        print("Calories", calories)
+        print("Speed", speed)
         data = {
             "calories": calories,
-            "speed": speed,
-            "activityDurationMins": activityDurationMins
+            "speed": speed
         }
         return jsonify(data)
 

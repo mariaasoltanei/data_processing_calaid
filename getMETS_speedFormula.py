@@ -1,6 +1,7 @@
 import math
 import pymongo
 import statistics
+from datetime import datetime, timedelta
 
 def millisToHour(millis):
     return (millis/(1000*60*60))%24
@@ -41,10 +42,13 @@ accelerometerDataCollection = db['AccelerometerData']
 userCollection = db['User']
 userWeight = 70
 
+dt = datetime.strptime("21:52:52.742000", '%Y-%m-%d %H:%M:%S.%f')
+dtMongo = dt - timedelta(hours=3)
+print("Dt mongo", type(dtMongo))
+print("Mongo",dtMongo)
+dtFiveSec = dtMongo - timedelta(seconds=20) #poate merge mai putin
 timestamps = []
-for document in accelerometerDataCollection.find({}):
-    # for key in document:
-    # timestamps.append(int(document["timestamp"].timestamp()))
+for document in accelerometerDataCollection.find({"userId": {"$neq":"6414e7b4911b2b5943024071"}, "timestamp":{"$gte": dtFiveSec, "$lte": dtMongo}}):
     timestamps.append(document["timestamp"])
 
 activityDurationHours = (max(timestamps) - min(timestamps)).total_seconds() / 3600.0
