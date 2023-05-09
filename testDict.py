@@ -183,7 +183,7 @@ testDataDict = {
     'fBodyAcc-entropy()-X':[], 
     'fBodyAcc-entropy()-Y':[],
     'fBodyAcc-entropy()-Z':[], 
-    'fBodyAcc-maxInds-X':[]
+    # 'fBodyAcc-maxInds-X':[]
     # 'fBodyAcc-maxInds-Y':[],
     # 'fBodyAcc-maxInds-Z':[], 
     # 'fBodyAcc-meanFreq()-X':[], 

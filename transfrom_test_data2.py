@@ -5,13 +5,10 @@ import math
 from scipy.stats import median_abs_deviation, entropy
 from processingFunctions import filterAcceleration, findFFT, maxInds, findMagnitudeGravity,findMagnitudeBodyJerk, findBodyJerk, findSMAMagnitude, findMagnitudeBody, filterGravity, findSMA, findEnergy, findQuantile, findEntropy, findArCoeff
 from testDict import testDataDict
-import certifi
-import pandas as pd
-import time
-ca = certifi.where()
+from scipy.fft import fft
 
 uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
-client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
+client = pymongo.MongoClient(uriMongodb)
 db = client['calaid_android']
 accelerometerDataCollection = db['AccelerometerData']
 
@@ -35,11 +32,10 @@ dfAccData['bodyMagnitudeJerk'] = findMagnitudeBodyJerk(dfAccData)
 dfAccData['xfBody'] = findFFT(dfAccData['xBody'])
 dfAccData['yfBody'] = findFFT(dfAccData['yBody'])
 dfAccData['zfBody'] = findFFT(dfAccData['zBody'])
+# print(findFFT(dfAccData['xBody']))
 dfAccData = dfAccData.dropna()
 # print("Null vals - test", sum(dfAccData.isnull().values))
 
-
-# dfAccData['xJerk'], dfAccData['yJerk'], dfAccData['zJerk'] = findJerk(dfAccData)
 dfAccData.to_csv('/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/uci_har_dataset/modeled_csv/test2.csv', encoding='utf-8', index=False)
 
 window_length = 128
@@ -50,6 +46,7 @@ windowed_data = []
 
 for i in range(0, len(dfAccData) - window_length, shift):
     window = dfAccData.iloc[i:i+window_length]
+
     testDataDict['tBodyAcc-mean()-X'].append(window['xBody'].mean())
     testDataDict['tBodyAcc-mean()-Y'].append(window['yBody'].mean())
     testDataDict['tBodyAcc-mean()-Z'].append((window['zBody']).mean())
@@ -62,7 +59,7 @@ for i in range(0, len(dfAccData) - window_length, shift):
     testDataDict['tBodyAcc-mad()-Y'].append(median_abs_deviation((window['yBody'])))
     testDataDict['tBodyAcc-mad()-Z'].append(median_abs_deviation((window['zBody'])))
     
-    testDataDict['tBodyAcc-max()-X'].append(max((window['xBody'])))
+    testDataDict['tBodyAcc-max()-X'].append(max((window['xBody'].values)))
     testDataDict['tBodyAcc-max()-Y'].append(max((window['yBody'])))
     testDataDict['tBodyAcc-max()-Z'].append(max((window['zBody'])))
 
@@ -251,40 +248,86 @@ for i in range(0, len(dfAccData) - window_length, shift):
     testDataDict['tBodyAccJerkMag-arCoeff()2'].append(findArCoeff((window['bodyMagnitudeJerk']),4)[1])
     testDataDict['tBodyAccJerkMag-arCoeff()3'].append(findArCoeff((window['bodyMagnitudeJerk']),4)[2])
     testDataDict['tBodyAccJerkMag-arCoeff()4'].append(findArCoeff((window['bodyMagnitudeJerk']),4)[3])
+    #FFT?
+    
+    # print(np.mean(np.abs(np.fft.fft(testDataDict['tBodyAcc-mean()-X']))))
+    testDataDict['fBodyAcc-mean()-X'].append(np.mean(np.abs(np.fft.fft(testDataDict['tBodyAcc-mean()-X']))))
+    testDataDict['fBodyAcc-mean()-Y'].append(np.mean(np.abs(np.fft.fft(testDataDict['tBodyAcc-mean()-Y']))))
+    testDataDict['fBodyAcc-mean()-Z'].append(np.mean(np.abs(np.fft.fft(testDataDict['tBodyAcc-mean()-Z']))))
 
-    testDataDict['fBodyAcc-mean()-X'].append(window['xfBody'].mean())
-    testDataDict['fBodyAcc-mean()-Y'].append(window['yfBody'].mean())
-    testDataDict['fBodyAcc-mean()-Z'].append(window['zfBody'].mean())
-    testDataDict['fBodyAcc-std()-X'].append(window['xfBody'].std())
-    testDataDict['fBodyAcc-std()-Y'].append(window['yfBody'].std())
-    testDataDict['fBodyAcc-std()-Z'].append(window['zfBody'].std())
-    testDataDict['fBodyAcc-mad()-X'].append(median_abs_deviation((window['xfBody'])))
-    testDataDict['fBodyAcc-mad()-Y'].append(median_abs_deviation((window['yfBody'])))
-    testDataDict['fBodyAcc-mad()-Z'].append(median_abs_deviation((window['zfBody'])))
+    testDataDict['fBodyAcc-std()-X'].append(np.std(np.abs(np.fft.fft(testDataDict['tBodyAcc-std()-X']))))
+    testDataDict['fBodyAcc-std()-Y'].append(np.std(np.abs(np.fft.fft(testDataDict['tBodyAcc-std()-Y']))))
+    testDataDict['fBodyAcc-std()-Z'].append(np.std(np.abs(np.fft.fft(testDataDict['tBodyAcc-std()-Z']))))
 
-    testDataDict['fBodyAcc-max()-X'].append(max((window['xfBody'])))
-    testDataDict['fBodyAcc-max()-Y'].append(max((window['yfBody'])))
-    testDataDict['fBodyAcc-max()-Z'].append(max((window['zfBody'])))
+    testDataDict['fBodyAcc-mad()-X'].append(median_abs_deviation(np.abs(np.fft.fft(testDataDict['tBodyAcc-mad()-X']))))
+    testDataDict['fBodyAcc-mad()-Y'].append(median_abs_deviation(np.abs(np.fft.fft(testDataDict['tBodyAcc-mad()-Y']))))
+    testDataDict['fBodyAcc-mad()-Z'].append(median_abs_deviation(np.abs(np.fft.fft(testDataDict['tBodyAcc-mad()-Z']))))
 
-    testDataDict['fBodyAcc-min()-X'].append(min((window['xfBody'])))
-    testDataDict['fBodyAcc-min()-Y'].append(min((window['yfBody'])))
-    testDataDict['fBodyAcc-min()-Z'].append(min((window['zfBody'])))
-    testDataDict['fBodyAcc-sma()'].append(findSMA((window['xfBody']), (window['yfBody']), (window['zfBody'])))
+    testDataDict['fBodyAcc-max()-X'].append(np.max(np.abs(np.fft.fft(testDataDict['tBodyAcc-max()-X']))))
+    testDataDict['fBodyAcc-max()-Y'].append(np.max(np.abs(np.fft.fft(testDataDict['tBodyAcc-max()-Y']))))
+    testDataDict['fBodyAcc-max()-Z'].append(np.max(np.abs(np.fft.fft(testDataDict['tBodyAcc-max()-Z']))))
 
-    testDataDict['fBodyAcc-energy()-X'].append(findEnergy((window['xfBody'])))
-    testDataDict['fBodyAcc-energy()-Y'].append(findEnergy((window['yfBody'])))
-    testDataDict['fBodyAcc-energy()-Z'].append(findEnergy((window['zfBody'])))
+    testDataDict['fBodyAcc-min()-X'].append(np.min(np.abs(np.fft.fft(testDataDict['tBodyAcc-min()-X']))))
+    testDataDict['fBodyAcc-min()-Y'].append(np.min(np.abs(np.fft.fft(testDataDict['tBodyAcc-min()-Y']))))
+    testDataDict['fBodyAcc-min()-Z'].append(np.min(np.abs(np.fft.fft(testDataDict['tBodyAcc-min()-Z']))))
 
-    testDataDict['fBodyAcc-iqr()-X'].append(findQuantile((window['xfBody'])))
-    testDataDict['fBodyAcc-iqr()-Y'].append(findQuantile((window['yfBody'])))
-    testDataDict['fBodyAcc-iqr()-Z'].append(findQuantile((window['zfBody'])))
+    #nu cred ca trebuie mean pt urmatoarele
+    testDataDict['fBodyAcc-sma()'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-sma()'])).mean())
+    
+    testDataDict['fBodyAcc-energy()-X'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-energy()-X'])).mean())
+    testDataDict['fBodyAcc-energy()-Y'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-energy()-Y'])).mean())
+    testDataDict['fBodyAcc-energy()-Z'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-energy()-Z'])).mean())
 
-    testDataDict['fBodyAcc-entropy()-X'].append(findEntropy((window['xfBody'])))
-    testDataDict['fBodyAcc-entropy()-Y'].append(findEntropy((window['yfBody'])))
-    testDataDict['fBodyAcc-entropy()-Z'].append(findEntropy((window['zfBody'])))
+    testDataDict['fBodyAcc-iqr()-X'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-iqr()-X'])).mean())
+    testDataDict['fBodyAcc-iqr()-Y'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-iqr()-Y'])).mean())
+    testDataDict['fBodyAcc-iqr()-Z'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-iqr()-Z'])).mean())
 
-#am ramas sa calculez maxInds
-    testDataDict['fBodyAcc-maxInds-X'].append(maxInds((window['xfBody'])))
+    testDataDict['fBodyAcc-entropy()-X'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-entropy()-X'])).mean())
+    testDataDict['fBodyAcc-entropy()-Y'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-entropy()-X'])).mean())
+    testDataDict['fBodyAcc-entropy()-Z'].append(np.abs(np.fft.fft(testDataDict['tBodyAcc-entropy()-X'])).mean())
+
+    print(np.abs(np.fft.fft(window['xBody'].values)))
+    # print(np.mean(np.abs(np.fft.fft(window['xBody'].values))))
+
+    #fft = np.fft.fft(window['xBody'])
+    # power_spectrum = np.abs(fft) ** 2
+    # freqs = np.fft.fftfreq(window_length, 1/50)
+    # pos_freqs = freqs[:window_length//2 + 1]
+
+    # # Sum the power spectrum over the positive frequency bins to obtain the energy of the signal
+    # energy = np.sum(power_spectrum[:window_length//2 + 1])
+    # print(energy)
+
+    # testDataDict['fBodyAcc-mean()-X'].append(window['xfBody'].mean())
+    # testDataDict['fBodyAcc-mean()-Y'].append(window['yfBody'].mean())
+    # testDataDict['fBodyAcc-mean()-Z'].append(window['zfBody'].mean())
+    # testDataDict['fBodyAcc-std()-X'].append(window['xfBody'].std())
+    # testDataDict['fBodyAcc-std()-Y'].append(window['yfBody'].std())
+    # testDataDict['fBodyAcc-std()-Z'].append(window['zfBody'].std())
+    # testDataDict['fBodyAcc-mad()-X'].append(median_abs_deviation((window['xfBody'])))
+    # testDataDict['fBodyAcc-mad()-Y'].append(median_abs_deviation((window['yfBody'])))
+    # testDataDict['fBodyAcc-mad()-Z'].append(median_abs_deviation((window['zfBody'])))
+
+    # testDataDict['fBodyAcc-max()-X'].append(max((window['xfBody'])))
+    # testDataDict['fBodyAcc-max()-Y'].append(max((window['yfBody'])))
+    # testDataDict['fBodyAcc-max()-Z'].append(max((window['zfBody'])))
+
+    # testDataDict['fBodyAcc-min()-X'].append(min((window['xfBody'])))
+    # testDataDict['fBodyAcc-min()-Y'].append(min((window['yfBody'])))
+    # testDataDict['fBodyAcc-min()-Z'].append(min((window['zfBody'])))
+    # testDataDict['fBodyAcc-sma()'].append(findSMA((window['xfBody']), (window['yfBody']), (window['zfBody'])))
+
+    # testDataDict['fBodyAcc-energy()-X'].append(findEnergy((window['xfBody'])))
+    # testDataDict['fBodyAcc-energy()-Y'].append(findEnergy((window['yfBody'])))
+    # testDataDict['fBodyAcc-energy()-Z'].append(findEnergy((window['zfBody'])))
+
+    # testDataDict['fBodyAcc-iqr()-X'].append(findQuantile((window['xfBody'])))
+    # testDataDict['fBodyAcc-iqr()-Y'].append(findQuantile((window['yfBody'])))
+    # testDataDict['fBodyAcc-iqr()-Z'].append(findQuantile((window['zfBody'])))
+
+    # testDataDict['fBodyAcc-entropy()-X'].append(findEntropy((window['xfBody'])))
+    # testDataDict['fBodyAcc-entropy()-Y'].append(findEntropy((window['yfBody'])))
+    # testDataDict['fBodyAcc-entropy()-Z'].append(findEntropy((window['zfBody'])))
 
 #  'fBodyAcc-maxInds-X':[], 
 #     'fBodyAcc-maxInds-Y':[],
@@ -327,21 +370,24 @@ for i in range(0, len(dfAccData) - window_length, shift):
 #     'fBodyAcc-bandsEnergy()-1,24':[], 
 #     'fBodyAcc-bandsEnergy()-25,48':[], 
 
-
-
-    # testDataDict['tBodyAcc-correlation()-X,Y'].append(filterAcceleration(window['x']).corr(filterAcceleration(window['y'])))
-    #findArCoeff(filterAcceleration(dfAccData['x']), 4)[0]
     # body = filterAcceleration(window['x'])
     windowed_data.append(window)
 
 windowed_df = pd.concat(windowed_data, ignore_index=True)
 # print(testDataDict)
 
-print(((testDataDict['fBodyAcc-maxInds-X'])))
+# print(((testDataDict['fBodyAcc-maxInds-X'])))
 # print((testDataDict['tBodyAcc-arCoeff()-Y,1']))
 # print((testDataDict['tBodyAcc-arCoeff()-Z,1']))
 # print((testDataDict['tBodyAcc-correlation()-X,Y']))
 testDataDF = pd.DataFrame(testDataDict)
-print(testDataDF)
+print(testDataDict['tBodyAcc-mean()-X'])
+
+x_acc = testDataDF['tBodyAcc-mean()-X'].values
+fft_signal = fft(x_acc)
+x_freq = fft_signal[1]
+print(fft_signal[1])
+x_freq_mean = np.mean(np.abs(x_freq))
+print(x_freq_mean)
 testDataDF.to_csv('/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/uci_har_dataset/modeled_csv/test1.csv', encoding='utf-8', index=False)
 # print(windowed_df)

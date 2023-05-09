@@ -5,37 +5,29 @@ import math
 import statsmodels.api as sm
 from scipy.signal import butter, filtfilt, medfilt
 from scipy.stats import median_abs_deviation, entropy
+from scipy.fft import fft
 
-def filterAcceleration(df):
-    df = df.rolling(window=3, center=True, min_periods=1).median()
-
-    fs = 50  #sampling rate
-    f_cutoff = 20  # Filter cutoff frequency (Hz)
+def applyFilters(df):
+    fs = 50 
+    f_cutoff = 20  
     f_cutoff2 = 0.3  # Second filter cutoff frequency (Hz)
+    df = medfilt(df, kernel_size=5)  #kernel_size=2
 
     b, a = butter(3, f_cutoff/(fs/2), 'low')
     df_filtered = filtfilt(b, a, df, axis=0)
 
     b2, a2 = butter(3, f_cutoff2/(fs/2), 'low')
     gravity = filtfilt(b2, a2, df_filtered, axis=0)
-    # print("Gravity mean", gravity.mean())
 
+    return df_filtered, gravity
+
+def filterAcceleration(df):
+    df_filtered, gravity = applyFilters(df)
     body = df_filtered - gravity
     return body
 
 def filterGravity(df):
-    df = df.rolling(window=3, center=True, min_periods=1).median()
-
-    fs = 50  #sampling rate
-    f_cutoff = 20  # Filter cutoff frequency (Hz)
-    f_cutoff2 = 0.3  # Second filter cutoff frequency (Hz)
-
-    b, a = butter(3, f_cutoff/(fs/2), 'low')
-    df_filtered = filtfilt(b, a, df, axis=0)
-
-    b2, a2 = butter(3, f_cutoff2/(fs/2), 'low')
-    gravity = filtfilt(b2, a2, df_filtered, axis=0)
-
+    df_filtered, gravity = applyFilters(df)
     return gravity
 
 def findBodyJerk(dfAccData):
@@ -49,7 +41,7 @@ def findBodyJerk(dfAccData):
     jy = vy.diff() / dt
     jz = vz.diff() / dt
 
-    return jx, jy, jz
+    return vx, vy, vz
 
 def findSMA(dfx, dfy, dfz):
     sum_abs = np.abs(dfx) + np.abs(dfy) + np.abs(dfz)
@@ -97,9 +89,8 @@ def findMagnitudeBodyJerk(df):
     return np.sqrt(df['xBodyJerk']**2 + df['yBodyJerk']**2 + df['zBodyJerk']**2)
 
 def findFFT(df):
-    return np.fft.fftfreq(len(df))
+    return np.abs(np.fft.fft(df.values))
      
 def maxInds(df):
-    freq_axis = np.linspace(0, 100, num=1024)
     max_index = np.argmax(np.abs(df))
     return max_index

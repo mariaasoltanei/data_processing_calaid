@@ -23,7 +23,7 @@ def getActivityDetails(mongoUserId, currentTimestamp):
     dtMongo = dt - timedelta(hours=3)
     print("Dt mongo", type(dtMongo))
     print("Mongo",dtMongo)
-    dtFiveSec = dtMongo - timedelta(seconds=20) #poate merge mai putin
+    dtFiveSec = dtMongo - timedelta(seconds=150) #cu cat inainte au fost gasitit pasii
     print("3 sec",dtFiveSec)
     uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
     client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
@@ -41,11 +41,13 @@ def getActivityDetails(mongoUserId, currentTimestamp):
     print(len(listStepData))
     if(len(listStepData) > 1):
         dfStepData = pd.DataFrame(listStepData)
+        
         dfStepData = dfStepData.sort_values('timestamp')
-        print(dfStepData)
+        # print(dfStepData)
 
         activityDurationMins = (max(dfStepData['timestamp']) - min(dfStepData['timestamp'])).total_seconds() / 60
         activityDurationHours = (max(dfStepData['timestamp']) - min(dfStepData['timestamp'])).total_seconds() / 3600.0
+        print(activityDurationHours)
 
         stepFrequnecy = (max(dfStepData['noSteps']) - min(dfStepData['noSteps']))/activityDurationMins #steps per minute
 
@@ -61,5 +63,5 @@ def getActivityDetails(mongoUserId, currentTimestamp):
 
 
 
-pula1,pula2 = getActivityDetails("6414e7b4911b2b5943024071","2023-05-04 21:52:52.742000")
+pula1,pula2 = getActivityDetails("6414e7b4911b2b5943024071","2023-05-06 21:55:23.742000")
 print(pula1, pula2)
