@@ -1,10 +1,11 @@
 from app import app, mongo
-from getCalories import getActivityDetails
+from getActivity import prepareData, getActivity,calculateCalories
 import certifi
 from flask import jsonify, request
-import time
 ca = certifi.where()
+import joblib
 
+model = joblib.load("C:\\Users\\sltnm\\Desktop\\FACULTATE\\LICENTA\\data_processing_calaid\\flask_server\\linearsvc.pkl")
 
 @app.route('/calories/<userId>', methods=['POST'])
 def getCalories(userId):
@@ -12,16 +13,29 @@ def getCalories(userId):
         print("USER ID", userId)
         jsonTimestamp = request.get_json()
         timestamp = jsonTimestamp['timestamp']
+        userWeight = jsonTimestamp['userWeight']
         print(jsonTimestamp['timestamp'])
-        print(type(jsonTimestamp['timestamp']))
-           #calories, speed, activityDurationMins = getActivityDetails(userId)
-        calories, speed = getActivityDetails(userId, timestamp)
-        
-        print("Calories", calories)
-        print("Speed", speed)
+        print(userWeight)
+        activity = getActivity(prepareData(userId, timestamp), model)
+        calories = calculateCalories(activity, userWeight)
+        print(activity, calories)
         data = {
-            "calories": calories,
-            "speed": speed
+            "activity": activity,
+            "calories": calories
+        }
+        return jsonify(data)
+
+
+@app.route('/test/<userId>', methods=['POST'])
+def test(userId):
+    if request.method == 'POST':
+        print("USER ID", userId)
+        jsonTimestamp = request.get_json()
+        userWeight = jsonTimestamp['userWeight']
+        print(jsonTimestamp['timestamp'])
+        print(userWeight)
+        data = {
+            "activity": "hellow world",
         }
         return jsonify(data)
 

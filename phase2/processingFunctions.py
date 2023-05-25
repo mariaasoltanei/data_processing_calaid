@@ -6,7 +6,7 @@ import statsmodels.api as sm
 from scipy.signal import butter, filtfilt, medfilt
 from scipy.stats import median_abs_deviation, entropy
 from scipy.fft import fft
-
+from scipy.stats import pearsonr
 def applyFilters(df):
     fs = 50 
     f_cutoff = 20  
@@ -43,31 +43,62 @@ def findBodyJerk(dfAccData):
 
     return vx, vy, vz
 
-def findSMA(dfx, dfy, dfz):
-    sum_abs = np.abs(dfx) + np.abs(dfy) + np.abs(dfz)
-    return (sum_abs/len(dfx)).mean()
+def findSMA(signal):
+    sma = sum(abs(value) for value in signal)
+    return sma
+
+def findAmplitude(signal):
+    np_fft = np.fft.fft(signal)
+    amplitudes = 2 / 128 * np.abs(np_fft) 
+    return amplitudes.mean()
+
+def findMad(data):
+    median = np.median(data)
+    deviations = np.abs(data - median)
+    mad = np.median(deviations)
+    return mad
 
 def findSMAMagnitude(df):
     sum_abs = np.abs(df)
     return (sum_abs/len(df)).mean()
 
-def findEnergy(df):
-    return np.sum((df**2))/len(df)
+def findEnergy(signal):
+    return sum(x ** 2 for x in signal)
     #Sum of the squares divided by the number of values. 
 
-def findQuantile(df):
-    return np.percentile(df, 75) - np.percentile(df, 25)
+def findQuantile(data):
+    sorted_data = sorted(data)
+    n = len(sorted_data)
+    
+    q1_index = int(0.25 * (n + 1))  # Index of the first quartile
+    q3_index = int(0.75 * (n + 1))  # Index of the third quartile
+    
+    q1 = sorted_data[q1_index]
+    q3 = sorted_data[q3_index]
+    
+    iqr = q3 - q1
+    return iqr
 
-def findEntropy(df, base=None):
-    hist, _ = np.histogram(df, bins='auto')
-    hist = hist / sum(hist)
-    return entropy(hist)
-    # value,counts = np.unique(df, return_counts=True)
-    # return entropy(counts, base=base)
-    # value_counts = df[colName].value_counts(normalize=True)
-    # probabilities = value_counts / len(df)
-    # entropy = sum(-p * math.log2(p) for p in probabilities)
-    # return entropy
+def findCorrelation(signal1, signal2):
+    correlation, _ = pearsonr(signal1, signal2)
+    return correlation
+def findEntropy(data):
+    frequency = {}
+    n = len(data)
+
+    # Count the occurrences of each unique value
+    for value in data:
+        if value in frequency:
+            frequency[value] += 1
+        else:
+            frequency[value] = 1
+
+    entropy = 0.0
+    for count in frequency.values():
+        probability = count / n
+        entropy -= probability * math.log2(probability)
+
+    return entropy
 
 
 def entropy1(labels, base=None):
