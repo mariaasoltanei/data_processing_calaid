@@ -1,0 +1,4 @@
+flask_server/.env
+flask_server/__pycache__
+thesisPaperUtils/__pycache__
+thesisPaperUtils/workflow.txt

@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import numpy as np
 from datetime import datetime, timedelta
 import pymongo
@@ -12,7 +13,7 @@ def prepareData(mongoUserId, currentTimestamp):
     dtMongoEnd = dtMongoStart - timedelta(minutes=2) 
     print(dtMongoStart)
     print(dtMongoEnd)
-    uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
+    uriMongodb = os.getenv('uriMongodb')
     client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
     db = client['calaid_android']
     accelerometerDataCollection = db['AccelerometerData']
@@ -33,13 +34,11 @@ def prepareData(mongoUserId, currentTimestamp):
     dfAccData['yBody'] = filterAcceleration(dfAccData['y'])
     dfAccData['zBody'] = filterAcceleration(dfAccData['z'])
 
-    print(dfAccData)
-    print(dfGyroData)
     merged_df = pd.merge_asof(dfAccData, dfGyroData, on=['timestamp'], tolerance=pd.Timedelta('10000ms'))
     merged_df.dropna(inplace=True)
     merged_df = merged_df.drop(['_id_x', '_id_y','userId_x'], axis=1)
     merged_df = merged_df.rename(columns={'x_x':'xAcc', 'y_x':'yAcc', 'z_x':'zAcc', 'xBody_x':'xAccBody', 'yBody_x':'yAccBody', 'zBody_x':'zAccBody', 'x_y':'xGyro', 'y_y':'yGyro', 'z_y':'zGyro', 'xBody_y':'xGyroBody', 'yBody_y':'yGyroBody', 'zBody_y':'zGyroBody'})
-    print(merged_df)
+
     testDataDict = {
             'body_acc_x_mean': [],
             'body_acc_y_mean': [],
@@ -190,22 +189,18 @@ def calculateCalories(activity, userWeight):
         mets = 1.0
     return 1.05 * mets * 0.033 * userWeight
 
-# model = joblib.load('linearsvc.pkl')
-
-#print(getActivity(prepareData("645e41cab22e8213021b5467", "2023-05-12 16:41:24.750000"), model))
-# print(pathlib.Path('linearsvc.pkl').absolute())
-# def trainModel(train_x, train_y):
-
-#     model = LinearSVC(C=30, dual=False, penalty ='l2')
-#     model.fit(train_x, train_y)
-#     return model
-
-# dfTrain = pd.read_csv('/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/data_processing_calaid/phase2/train.csv')
-# print(dfTrain.sample())
-# X_train = dfTrain.drop(['Activity', 'ActivityName'], axis=1)
-# y_train = dfTrain.ActivityName
-
-# # # # labels=['LAYING', 'SITTING','STANDING','WALKING','WALKING_DOWNSTAIRS','WALKING_UPSTAIRS']
-# joblib.dump(trainModel(X_train, y_train), "/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/data_processing_calaid/flask_server/linearsvc.pkl")
-
-# model = joblib.load("/mnt/c/Users/sltnm/Desktop/FACULTATE/LICENTA/data_processing_calaid/flask_server/linearsvc.pkl")
+def addToDatabase(userId, endTimestamp, activityType, caloriesBurned):
+    uriMongodb = os.getenv('uriMongodb')
+    client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
+    db = client['calaid_android']
+    activityDataCollection = db['ActivityData']
+    endTimestamp = datetime.strptime(endTimestamp, '%Y-%m-%d %H:%M:%S.%f')
+    startTimestamp = endTimestamp - timedelta(milliseconds=300000) 
+    activityDataDoc = {
+        "startTimestamp":startTimestamp,
+        "endTimestamp": endTimestamp,
+        "userId": userId,
+        "activityType": activityType,
+        "caloriesBurned": caloriesBurned
+    }
+    activityDataCollection.insert_one(activityDataDoc)

@@ -1,7 +1,10 @@
 from flask import Flask
 from flask_pymongo import PyMongo
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
-uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
-app.config["MONGO_URI"] = uriMongodb
+app.config["MONGO_URI"] = os.getenv('uriMongodb')
 mongo = PyMongo(app)

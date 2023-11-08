@@ -1,4 +1,5 @@
 import pymongo
+import os
 from datetime import datetime, timedelta
 import certifi
 import pandas as pd
@@ -25,7 +26,7 @@ def getActivityDetails(mongoUserId, currentTimestamp):
     print("Mongo",dtMongo)
     dtFiveSec = dtMongo - timedelta(seconds=150) #cu cat inainte au fost gasitit pasii
     print("3 sec",dtFiveSec)
-    uriMongodb = 'mongodb+srv://root:caloriepredictor2023@atlascluster.lyrf4oo.mongodb.net/calaid_android'
+    uriMongodb = os.getenv('uriMongodb')
     client = pymongo.MongoClient(uriMongodb, tlsCAFile=ca)
     db = client['calaid_android']
     stepCountDataCollection = db['StepCount']
@@ -63,5 +64,3 @@ def getActivityDetails(mongoUserId, currentTimestamp):
 
 
 
-pula1,pula2 = getActivityDetails("6414e7b4911b2b5943024071","2023-05-06 21:55:23.742000")
-print(pula1, pula2)
