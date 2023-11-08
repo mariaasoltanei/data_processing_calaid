@@ -1,3 +1,5 @@
 flask_server/.env
-__pycache__
+__pycache__/
+.idea/
+.ipynb_checkpoints/
 thesisPaperUtils/workflow.txt
